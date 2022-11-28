@@ -70,6 +70,7 @@ open class BasePreviewActivity : BaseActivity() {
             imageCapture,
             imageAnalyzer
         )
+
         //预览加载到view上 子类具体实现
         onPreviewPrepared(mPreview)
     }
@@ -84,7 +85,6 @@ open class BasePreviewActivity : BaseActivity() {
     private fun initTakePictureCases() {
         // ImageCapture
         imageCapture = ImageCapture.Builder()
-            .setFlashMode(ImageCapture.FLASH_MODE_AUTO)
             .setTargetAspectRatio(aspectRatio())
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)//低延迟低质量 or 高延迟高质量
             .setTargetRotation(getRotation())

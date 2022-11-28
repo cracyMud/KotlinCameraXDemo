@@ -61,10 +61,18 @@ class TakePictureActivity : BasePreviewActivity() {
         }
 
         imageCapture?.flashMode = mode
+
+
         when (mode) {
             ImageCapture.FLASH_MODE_AUTO -> Toast.makeText(this, "闪光灯自动", Toast.LENGTH_SHORT).show()
-            ImageCapture.FLASH_MODE_ON -> Toast.makeText(this, "闪光灯打开", Toast.LENGTH_SHORT).show()
-            ImageCapture.FLASH_MODE_OFF -> Toast.makeText(this, "闪光灯关闭", Toast.LENGTH_SHORT).show()
+            ImageCapture.FLASH_MODE_ON -> {
+                mCamera!!.cameraControl.enableTorch(true)
+                Toast.makeText(this, "闪光灯打开", Toast.LENGTH_SHORT).show()
+            }
+            ImageCapture.FLASH_MODE_OFF -> {
+                mCamera!!.cameraControl.enableTorch(false)
+                Toast.makeText(this, "闪光灯关闭", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

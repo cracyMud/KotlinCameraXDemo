@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.os.SystemClock
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -12,6 +11,7 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.animation.ScaleAnimation
 import android.widget.Toast
+import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -20,6 +20,8 @@ import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.video.OnVideoSavedCallback
 import androidx.camera.view.video.OutputFileOptions
 import androidx.camera.view.video.OutputFileResults
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.LiveData
 import cn.com.zt.R
 import cn.com.zt.activity.BaseActivity
 import cn.com.zt.databinding.ActivityPictureBinding
@@ -34,6 +36,7 @@ import java.util.concurrent.Executors
  * description:使用cameraController更方便
  */
 class CameraControllerActivity : BaseActivity() {
+    val TAG = "CameraControllerActivity"
     private lateinit var binding: ActivityPictureBinding
     private lateinit var lifecycleCameraController: LifecycleCameraController
     private lateinit var cameraExecutor: ExecutorService
@@ -58,12 +61,30 @@ class CameraControllerActivity : BaseActivity() {
         lifecycleCameraController.bindToLifecycle(this)
         lifecycleCameraController.imageCaptureFlashMode = ImageCapture.FLASH_MODE_AUTO
         binding.previewView.controller = lifecycleCameraController
+        lifecycleCameraController.initializationFuture
+            .addListener(Runnable {
+                getCameraInfo()
+            },
+                ContextCompat.getMainExecutor(this)/*获取主线程executor*/)
+
         binding.previewView.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 startFocusAnim(event.x.toInt(), event.y.toInt())
             }
             false
         }
+    }
+
+    /**
+     * 获取相机信息，必须在主线程里面完成
+     */
+    fun getCameraInfo() {
+        val ci: CameraInfo? = lifecycleCameraController.cameraInfo
+        Log.e(TAG, ci.toString())
+        val tou: LiveData<Int> = lifecycleCameraController.torchState
+        Log.e(TAG, "value=${tou.value}")
+
+
     }
 
     private fun initFile() {
@@ -108,11 +129,18 @@ class CameraControllerActivity : BaseActivity() {
         if (lifecycleCameraController.imageCaptureFlashMode == mode) {
             return
         }
-        lifecycleCameraController.imageCaptureFlashMode = mode
+
+
         when (mode) {
             ImageCapture.FLASH_MODE_AUTO -> Toast.makeText(this, "闪光灯自动", Toast.LENGTH_SHORT).show()
-            ImageCapture.FLASH_MODE_ON -> Toast.makeText(this, "闪光灯打开", Toast.LENGTH_SHORT).show()
-            ImageCapture.FLASH_MODE_OFF -> Toast.makeText(this, "闪光灯关闭", Toast.LENGTH_SHORT).show()
+            ImageCapture.FLASH_MODE_ON -> {
+                lifecycleCameraController.enableTorch(true)
+                Toast.makeText(this, "闪光灯打开", Toast.LENGTH_SHORT).show()
+            }
+            ImageCapture.FLASH_MODE_OFF -> {
+                lifecycleCameraController.enableTorch(false)
+                Toast.makeText(this, "闪光灯关闭", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -279,3 +307,7 @@ class CameraControllerActivity : BaseActivity() {
         cameraExecutor.shutdown()
     }
 }
+
+
+
+
